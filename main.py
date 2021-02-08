@@ -112,11 +112,9 @@ def cropping_img(height, width):
     cv2.createTrackbar("W End", "Cropping2", width - 5, width, empty)
     cv2.createTrackbar("H Begin", "Cropping2", 5, height, empty)
     cv2.createTrackbar("H End", "Cropping2", height - 5, height, empty)
-    # cv2.createTrackbar("Thickness", "Cropping", 1, 4, empty)
 
     while True:
         img = imgResizing.copy()
-        #img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         min_width = cv2.getTrackbarPos("W Begin", "Cropping2")
         max_width = cv2.getTrackbarPos("W End", "Cropping2")
         min_height = cv2.getTrackbarPos("H Begin", "Cropping2")
@@ -200,9 +198,6 @@ cv2.imshow("out3", imgSt)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-#linesAmount = int(input("How many lines You want to extract? ") or "1") # cycle up limit
-#imgMask = np.zeros((height,width,3),np.uint8) # create blank image with zeros - black
-
 dots = bool(input("Do you want to use a brush or set dots? (default: brush)\n"
                   "Отслеживать линию кистью или проставить точки? (1)точки (Enter)кисть: ") or False)
 
@@ -244,7 +239,6 @@ else:
 
         while True:
             imgCrop = imgLine.copy()  # load new copy every cycle
-            #imgCrop = imgCrop[heightBegin:heightEnd, widthBegin:widthEnd] # crop image
             thresholdValue = cv2.getTrackbarPos("Threshold", "Thresholing") # getting value from tracker
             ret, imgCrop = cv2.threshold(imgCrop, thresholdValue, 255, 0) # thresholding image
             cv2.imshow("Thresholing", imgCrop) # show image in the same window as tracker
@@ -254,11 +248,9 @@ else:
         imgCrop = cv2.bitwise_not(imgCrop)
 
         skeleton_lee = skeletonize(imgCrop, method='lee')
-        #imgToSave = cv2.cvtColor(skeleton_lee, cv2.COLOR_BGR2GRAY) #translate from bgr to gray color scheme
+
         (thresh, imgToSave) = cv2.threshold(skeleton_lee, 127, 255, cv2.THRESH_BINARY) # making it black/white
 
-        #cv2.imshow("Img to save", imgToSave)
-        #cv2.waitKey(0)
         cv2.destroyAllWindows()
 
         cv2.namedWindow("Colouring")
@@ -294,4 +286,11 @@ else:
 print('All done!')
 
 
+#linesAmount = int(input("How many lines You want to extract? ") or "1") # cycle up limit
+#imgMask = np.zeros((height,width,3),np.uint8) # create blank image with zeros - black
 
+# cv2.imshow("Img to save", imgToSave)
+# cv2.waitKey(0)
+# imgToSave = cv2.cvtColor(skeleton_lee, cv2.COLOR_BGR2GRAY) #translate from bgr to gray color scheme
+
+# imgCrop = imgCrop[heightBegin:heightEnd, widthBegin:widthEnd] # crop image
