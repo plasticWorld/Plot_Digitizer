@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from skimage.morphology import skeletonize
+import os
 
 
 
@@ -275,6 +276,11 @@ else:
 
         curveName = input("Input curve name (default: 0)\n"
                           "Введите параметр линии(числовой) при значении которого выберут данную кривую: ") or "0"
+
+        # clear folder for img
+        filelist = [f for f in os.listdir("res/skeleton") if f.endswith(".png")]
+        for f in filelist:
+            os.remove(os.path.join("res/skeleton", f))
 
         cv2.imwrite("res/skeleton/" + curveName + ".png", imgToSave)  # png or tif support 16bit !
         imgToSave = cv2.cvtColor(imgToSave, cv2.COLOR_GRAY2BGR)
