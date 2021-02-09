@@ -1,14 +1,23 @@
-import cv2
+import cv2, shutil, os
 import numpy as np
-from skimage.morphology import skeletonize
-import os
-
-
+from skimage.morphology import skeletonize, medial_axis
+import importlib
+import runpy
 
 # def saveList(myList):
 #     # the filename should mention the extension 'npy'
 #     np.save("res/names.npy", myList)
 
+def folder_clear(folder):
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 def empty(a):
     pass
@@ -133,8 +142,10 @@ def cropping_img(height, width):
             break
     return img[min_height:max_height, min_width:max_width]
 
-
-imgGet = cv2.imread('res/img2.jpg', cv2.IMREAD_COLOR)#get image from file
+folderToSaveImg = 'res/skeleton/'
+folder_clear(folderToSaveImg)
+#print("Текущая деректория:", os.getcwd())
+imgGet = cv2.imread('res/img3.PNG', cv2.IMREAD_COLOR)#get image from file
 imgColour = imgGet.copy()#cv2.cvtColor(imgGet, cv2.COLOR_GRAY2BGR) # assign color model
 
 
@@ -145,25 +156,21 @@ imgColour = img_scaling(scale) # to fit at monitor
 # get borders for tracker
 height, width = imgColour.shape[:2]
 
-img_ratio = float(input("Input aspects ratio of image (default: 3/4)\n"
-                        "Введите соотношение высота/ширина: ") or "0.75")
-
-if width > height:
-    height = int(scale * img_ratio)
-else:
-    width = int(scale * img_ratio)
-
 drawing = False # true if mouse is pressed
 pt1_x, pt1_y = None , None
 dim_x, dim_y = [], []
 
 wrap = bool(input("Do you need a wrap perspective? (default: False)\n"
                   "Необходимо исправить перпективу (1)да (Enter)нет: ") or False)
-
+img_ratio = 0
 if wrap:
+    img_ratio = float(input("Input aspects ratio of image (default: 3/4)\n"
+                            "Введите соотношение высота/ширина: ") or "0.75")
+
     imgTemp2 = imgColour.copy()
     img_dots_temp = imgColour.copy()
     img_dots_temp[:]=255, 255, 255
+
 
     cv2.namedWindow("Cropping")
     cv2.setMouseCallback("Cropping", dots_drawing)
@@ -176,31 +183,37 @@ if wrap:
 
     cv2.destroyAllWindows()
 
-    cv2.line(img_dots_temp, (dim_x[0], dim_y[0]), (dim_x[2], dim_y[2]), (255, 0, 255), 2)  # left vertical line
-    cv2.line(img_dots_temp, (dim_x[0], dim_y[0]), (dim_x[1], dim_y[1]), (255, 0, 255), 2)  # up horizontal line
-    cv2.line(img_dots_temp, (dim_x[1], dim_y[1]), (dim_x[3], dim_y[3]), (255, 0, 255), 2)  # right vertical line
-    cv2.line(img_dots_temp, (dim_x[2], dim_y[2]), (dim_x[3], dim_y[3]), (255, 0, 255), 2)  # down horizontal line
-    img_dots_temp = cv2.bitwise_and(imgTemp2, img_dots_temp)
+    # cv2.line(img_dots_temp, (dim_x[0], dim_y[0]), (dim_x[2], dim_y[2]), (255, 0, 255), 2)  # left vertical line
+    # cv2.line(img_dots_temp, (dim_x[0], dim_y[0]), (dim_x[1], dim_y[1]), (255, 0, 255), 2)  # up horizontal line
+    # cv2.line(img_dots_temp, (dim_x[1], dim_y[1]), (dim_x[3], dim_y[3]), (255, 0, 255), 2)  # right vertical line
+    # cv2.line(img_dots_temp, (dim_x[2], dim_y[2]), (dim_x[3], dim_y[3]), (255, 0, 255), 2)  # down horizontal line
+    # img_dots_temp = cv2.bitwise_and(imgTemp2, img_dots_temp)
 
     pts1 = np.float32([[dim_x[0], dim_y[0]],[dim_x[1], dim_y[1]],[dim_x[2], dim_y[2]],[dim_x[3], dim_y[3]]])
     pts2 = np.float32([[0, 0],[width, 0],[0, height],[width, height]])
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
+
     imgResizing = cv2.warpPerspective(imgTemp2, matrix, (width, height))
+    if width > height:
+        height = int(scale * img_ratio)
+    else:
+        width = int(scale * img_ratio)
 else:
     imgResizing = imgColour.copy()
     img_dots_temp = imgColour.copy()
 
+
+#####
 img2 = cropping_img(height, width)
 height, width = img2.shape[:2]
 
-imgSt = stackImages(0.5, ([img_dots_temp, img2],[imgResizing, img2]))
-cv2.imshow("out3", imgSt)
-cv2.waitKey(0)
+# imgSt = stackImages(0.5, ([img_dots_temp, img2],[imgResizing, img2]))
+# cv2.imshow("out3", imgSt)
+# cv2.waitKey(0)
 cv2.destroyAllWindows()
 
 dots = bool(input("Do you want to use a brush or set dots? (default: brush)\n"
                   "Отслеживать линию кистью или проставить точки? (1)точки (Enter)кисть: ") or False)
-
 
 if dots:
     i = 0
@@ -234,6 +247,7 @@ else:
 
         thresholdValue = 10
         cv2.namedWindow("Thresholing")
+
         cv2.resizeWindow("Thresholing", width, height)
         cv2.createTrackbar("Threshold", "Thresholing", thresholdValue, 250, empty)
 
@@ -246,15 +260,13 @@ else:
                 break
 
         imgCrop = cv2.bitwise_not(imgCrop)
-
         skeleton_lee = skeletonize(imgCrop, method='lee')
-
         (thresh, imgToSave) = cv2.threshold(skeleton_lee, 127, 255, cv2.THRESH_BINARY) # making it black/white
 
         cv2.destroyAllWindows()
 
         cv2.namedWindow("Colouring")
-        brushColor = (0, 0, 0)
+        brushColor = (0)
         brushSize = 10
         imgMask = imgToSave
         cv2.setMouseCallback("Colouring", line_drawing)
@@ -270,21 +282,23 @@ else:
                           "Введите параметр линии(числовой) при значении которого выберут данную кривую: ") or "0"
 
         # clear folder for img
-        filelist = [f for f in os.listdir("res/skeleton") if f.endswith(".png")]
+        filelist = [f for f in os.listdir(folderToSaveImg) if f.endswith(".png")]
         for f in filelist:
-            os.remove(os.path.join("res/skeleton", f))
+            os.remove(os.path.join(folderToSaveImg, f))
 
-        cv2.imwrite("res/skeleton/" + curveName + ".png", imgToSave)  # png or tif support 16bit !
-        imgToSave = cv2.cvtColor(imgToSave, cv2.COLOR_GRAY2BGR)
+        cv2.imwrite(folderToSaveImg + curveName + ".png", imgToSave)  # png or tif support 16bit !
+        #imgToSave = cv2.cvtColor(imgToSave, cv2.COLOR_GRAY2BGR)
 
         nextLine = bool(input("Do you want to extract next line? (default: no)\n"
                               "Отслеживать линию кистью или проставить точки? (1)следующая (Enter)закончить: ") or False)
         if not nextLine:
+            os.system("python mat_transform.py")
+            #exec("mat_transform.py")
             break
-
-
 print('All done!')
 
+
+#exec("mat_transform.py")
 
 #linesAmount = int(input("How many lines You want to extract? ") or "1") # cycle up limit
 #imgMask = np.zeros((height,width,3),np.uint8) # create blank image with zeros - black
