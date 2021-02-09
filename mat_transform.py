@@ -88,28 +88,30 @@ for currentFile in mats:
         for line in f:
             mat.append([int(x) for x in line.split()])
 
-    tempMatrix = np.array(mat, bool) # DO YOU REALLY NEED IT ????????
-
+    tempMatrix = np.array(mat) # DO YOU REALLY NEED IT ???
+    # tX - строки(600), tY - столбцы (800)
+    tempY, tempX = np.nonzero(tempMatrix) # получаем список индексов не нулевых элементов
+    #
     ratioScaleX = round((widthDelta / tempMatrix.shape[1]), 10)
     ratioScaleY = round((heightDelta / len(tempMatrix)), 10)
+
     space = int(len(tempMatrix[0]) / (tempMatrix.shape[1]*(space/100)))
-    for j in range(0, tempMatrix.shape[1] - 1, space):  # прореживание происходит здесь
-        tempX = round(float((j * ratioScaleX)), 10)
-        for i in range(0, len(tempMatrix)-1, 1): # начинаем перебор с строк
-            tempY = heightDelta - round(float((i * ratioScaleY)), 10) #
-            if tempMatrix[i][j]: # if True
-                tempDict[tempX] = tempY # save to inner dict
-    plotsDict[currentFile[:-4]] = tempDict
+
+    tempX = tempX * ratioScaleX
+    tempY = heightDelta - tempY * ratioScaleY
+    tempDict = dict(zip(tempX[0::space], tempY[0::space]))
+    plotsDict[currentFile[:-4]] = dict(sorted(tempDict.items()))
 
 
-fig = plt.figure()
+fig = plt.figure(1)
 for lineParam, lineCoordinates in plotsDict.items():
     # set plot view
     plt.plot(lineCoordinates.keys(), lineCoordinates.values(), label=lineParam, linewidth=1)
     plt.axis([float(width_dim_begin), float(width_dim), float(height_dim_begin), float(height_dim)])
     plt.grid(True)
 plt.legend()
-plt.show()
+plt.savefig("1.png")
+#plt.show()
 
 
 
