@@ -1,5 +1,5 @@
 import numpy as np
-import os, cv2
+import os, cv2, json
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
@@ -52,11 +52,11 @@ def transform_coordinates(space, tempMatrix, widthDelta, heightDelta, xMin, yMin
     return tempDict
 
 
-width_dim_begin, height_dim_begin = (input("Input initial of axes (1)wigth, (2)height (default: 0 0)\n"
-                                           "Введите координаты сетки верхнего левого угла графика через пробел: ") or "0 0").split()
+width_dim_begin, height_dim_begin = (input("Input min initial of axes (1)wigth, (2)height (default: 0 0)\n"
+                                           "Введите минимальные значения сетки графика через пробел: ") or "0 0").split()
 
-width_dim, height_dim = (input("Input final values of axes (1)wigth, (2)height (default: 1 1)\n"
-                               "Введите координаты сетки нижнего правого угла графика через пробел: ") or "1 1").split()
+width_dim, height_dim = (input("Input max final values of axes (1)wigth, (2)height (default: 1 1)\n"
+                               "Введите максимальные значения сетки графика через пробел: ") or "1 1").split()
 
 space = int(input("Input space value (default: 10%)\n"
                   "Введите процент разреживания(каждый КАКОЙ столбец учитывается): ") or "20")
@@ -82,10 +82,17 @@ for currentFile in filesNames:
     # add dict of plot coordinates to final dict with curve name(digital) as key
     plotsDict[currentFile[:-4]] = dict(sorted(tempDict.items()))
 
-fig = plt.figure()
-for lineParam, lineCoordinates in plotsDict.items():
-    draw_plot(lineCoordinates, lineParam)
-plt.legend()
-plt.show()
-#plt.savefig("1.png")
+json.dump(plotsDict, open("test_data.json", 'w'), indent=4)
+#data = json.load( open( "file_name.json" ) )
+#with open('data.json', 'r', encoding='utf-8') as fh: #открываем файл на чтение
+#    data = json.load(fh) #загружаем из файла данные в словарь data
+
+#вывод картинки графика for check
+# fig = plt.figure()
+# for lineParam, lineCoordinates in plotsDict.items():
+#     draw_plot(lineCoordinates, lineParam)
+# plt.savefig("_all.png")
+# plt.legend()
+# plt.show()
+
 print('Get coordinates!')

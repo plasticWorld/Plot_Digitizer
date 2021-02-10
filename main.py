@@ -282,9 +282,9 @@ else:
                           "Введите параметр линии(числовой) при значении которого выберут данную кривую: ") or "0"
 
         # clear folder for img
-        filelist = [f for f in os.listdir(folderToSaveImg) if f.endswith(".png")]
-        for f in filelist:
-            os.remove(os.path.join(folderToSaveImg, f))
+        # filelist = [f for f in os.listdir(folderToSaveImg) if f.endswith(".png")]
+        # for f in filelist:
+        #     os.remove(os.path.join(folderToSaveImg, f))
 
         cv2.imwrite(folderToSaveImg + curveName + ".png", imgToSave)  # png or tif support 16bit !
         #imgToSave = cv2.cvtColor(imgToSave, cv2.COLOR_GRAY2BGR)
