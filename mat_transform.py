@@ -1,7 +1,6 @@
 import numpy as np
 import os, cv2, json
 import matplotlib.pyplot as plt
-from collections import defaultdict
 
 
 def draw_plot(lineCoordinates, lineParam):
@@ -82,17 +81,24 @@ for currentFile in filesNames:
     # add dict of plot coordinates to final dict with curve name(digital) as key
     plotsDict[currentFile[:-4]] = dict(sorted(tempDict.items()))
 
-json.dump(plotsDict, open("test_data.json", 'w'), indent=4)
+file_name = (input("Input file name \n"
+                   "Введите имя файла для сохранения: ") or "test")
+
+folderToSaveJson = 'output/json_data/'
+if not os.path.isdir(folderToSaveJson):
+    os.mkdir(folderToSaveJson)
+
+json.dump(plotsDict, open(folderToSaveJson + file_name + ".json", 'w'), indent=4)
 #data = json.load( open( "file_name.json" ) )
 #with open('data.json', 'r', encoding='utf-8') as fh: #открываем файл на чтение
 #    data = json.load(fh) #загружаем из файла данные в словарь data
 
 #вывод картинки графика for check
-# fig = plt.figure()
-# for lineParam, lineCoordinates in plotsDict.items():
-#     draw_plot(lineCoordinates, lineParam)
-# plt.savefig("_all.png")
-# plt.legend()
-# plt.show()
+fig = plt.figure()
+for lineParam, lineCoordinates in plotsDict.items():
+    draw_plot(lineCoordinates, lineParam)
+plt.savefig("_all.png")
+plt.legend()
+plt.show()
 
 print('Get coordinates!')

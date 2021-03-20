@@ -72,7 +72,7 @@ def line_drawing(event,x,y,flags,param):
         cv2.line(img,(pt1_x,pt1_y),(x,y),color=brushColor,thickness=brushSize)
 
 def img_scaling(scale):
-    img = imgColour.copy()
+    img = imgGet.copy()
     height, width = img.shape[:2]  # image dimentions
 
     # масштабируем до 600рх по длинной стороне
@@ -143,10 +143,13 @@ def cropping_img(height, width):
     return img[min_height:max_height, min_width:max_width]
 
 folderToSaveImg = 'res/skeleton/'
+if not os.path.isdir(folderToSaveImg):
+    os.mkdir(folderToSaveImg)
+#folderToSaveImg = 'res/skeleton/'
 folder_clear(folderToSaveImg)
 #print("Текущая деректория:", os.getcwd())
-imgGet = cv2.imread('res/img3.PNG', cv2.IMREAD_COLOR)#get image from file
-imgColour = imgGet.copy()#cv2.cvtColor(imgGet, cv2.COLOR_GRAY2BGR) # assign color model
+imgGet = cv2.imread('res/img4.png', cv2.IMREAD_COLOR)#get image from file
+#imgColour = imgGet.copy()#cv2.cvtColor(imgGet, cv2.COLOR_GRAY2BGR) # assign color model
 
 
 scale = int(input("Input window size in px (default=800)\n"
