@@ -1,6 +1,7 @@
 import numpy as np
 import os, cv2, json
 import matplotlib.pyplot as plt
+from main import check_folder_exist
 
 
 def draw_plot(lineCoordinates, lineParam):
@@ -50,55 +51,56 @@ def transform_coordinates(space, tempMatrix, widthDelta, heightDelta, xMin, yMin
     tempDict = dict(zip(tempX[0::space], tempY[0::space]))
     return tempDict
 
+if __name__ == '__main__':
+    width_dim_begin, height_dim_begin = (input("Input min initial of axes (1)wigth, (2)height (default: 0 0)\n"
+                                               "Введите минимальные значения сетки графика через пробел: ") or "0 0").split()
 
-width_dim_begin, height_dim_begin = (input("Input min initial of axes (1)wigth, (2)height (default: 0 0)\n"
-                                           "Введите минимальные значения сетки графика через пробел: ") or "0 0").split()
+    width_dim, height_dim = (input("Input max final values of axes (1)wigth, (2)height (default: 1 1)\n"
+                                   "Введите максимальные значения сетки графика через пробел: ") or "1 1").split()
 
-width_dim, height_dim = (input("Input max final values of axes (1)wigth, (2)height (default: 1 1)\n"
-                               "Введите максимальные значения сетки графика через пробел: ") or "1 1").split()
+    space = int(input("Input space value (default: 10%)\n"
+                      "Введите процент разреживания(каждый КАКОЙ столбец учитывается): ") or "20")
 
-space = int(input("Input space value (default: 10%)\n"
-                  "Введите процент разреживания(каждый КАКОЙ столбец учитывается): ") or "20")
+    # round float to 2 digits after dot
+    widthDelta = round((float(width_dim) - float(width_dim_begin)), 2)
+    heightDelta = round((float(height_dim) - float(height_dim_begin)), 2)
 
-# round float to 2 digits after dot
-widthDelta = round((float(width_dim) - float(width_dim_begin)), 2)
-heightDelta = round((float(height_dim) - float(height_dim_begin)), 2)
+    # определение пути
+    folderToFindImg = 'res/skeleton/'
+    filesNames = load_list(folderToFindImg)
 
-# определение пути
-folderToFindImg = 'res/skeleton/'
-filesNames = load_list(folderToFindImg)
+    # словарь словарей координат - внешний ключ - параметр кривой, внутренний - координата Х
+    plotsDict = {}
 
-# словарь словарей координат - внешний ключ - параметр кривой, внутренний - координата Х
-plotsDict = {}
+    for currentFile in filesNames:
+        tempMatrix = cv2.imread(folderToFindImg + currentFile, 0)  # 0 - for gray color scheme:(0, 255)
+        # отражаем матрицу, чтобы соориентировать ось у по направлению увеличения индексов строк
+        tempMatrix = cv2.flip(tempMatrix, 0)
+        # percent of sparseness
+        space = int(len(tempMatrix[0]) / (tempMatrix.shape[1] * (space / 100)))
+        tempDict = transform_coordinates(space, tempMatrix, widthDelta, heightDelta, width_dim_begin, height_dim_begin)
+        # add dict of plot coordinates to final dict with curve name(digital) as key
+        plotsDict[currentFile[:-4]] = dict(sorted(tempDict.items()))
 
-for currentFile in filesNames:
-    tempMatrix = cv2.imread(folderToFindImg + currentFile, 0)  # 0 - for gray color scheme:(0, 255)
-    # отражаем матрицу, чтобы соориентировать ось у по направлению увеличения индексов строк
-    tempMatrix = cv2.flip(tempMatrix, 0)
-    # percent of sparseness
-    space = int(len(tempMatrix[0]) / (tempMatrix.shape[1] * (space / 100)))
-    tempDict = transform_coordinates(space, tempMatrix, widthDelta, heightDelta, width_dim_begin, height_dim_begin)
-    # add dict of plot coordinates to final dict with curve name(digital) as key
-    plotsDict[currentFile[:-4]] = dict(sorted(tempDict.items()))
+    file_name = (input("Input file name \n"
+                       "Введите имя файла для сохранения: ") or "test")
 
-file_name = (input("Input file name \n"
-                   "Введите имя файла для сохранения: ") or "test")
+    folderToSaveJson = 'res/output_json_data/'
+    check_folder_exist(folderToSaveJson)
+    # if not os.path.isdir(folderToSaveJson):
+    #     os.mkdir(folderToSaveJson)
 
-folderToSaveJson = 'output/json_data/'
-if not os.path.isdir(folderToSaveJson):
-    os.mkdir(folderToSaveJson)
+    json.dump(plotsDict, open(folderToSaveJson + file_name + ".json", 'w'), indent=4)
 
-json.dump(plotsDict, open(folderToSaveJson + file_name + ".json", 'w'), indent=4)
-#data = json.load( open( "file_name.json" ) )
-#with open('data.json', 'r', encoding='utf-8') as fh: #открываем файл на чтение
-#    data = json.load(fh) #загружаем из файла данные в словарь data
 
 #вывод картинки графика for check
-fig = plt.figure()
-for lineParam, lineCoordinates in plotsDict.items():
-    draw_plot(lineCoordinates, lineParam)
-plt.savefig("_all.png")
-plt.legend()
-plt.show()
+# fig = plt.figure()
+# for lineParam, lineCoordinates in plotsDict.items():
+#     draw_plot(lineCoordinates, lineParam)
+# plt.savefig("_all.png")
+# plt.legend()
+# plt.show()
 
-print('Get coordinates!')
+    print('Get coordinates!')
+
+
