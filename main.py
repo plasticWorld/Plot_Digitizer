@@ -51,12 +51,12 @@ def img_scaling(scale):
     height, width = img.shape[:2]  # image dimentions
 
     # масштабируем до 600рх по длинной стороне
+    height = int(height * scale / width)
+    width = scale
     if height >= width:
         width = int(width * scale / height)
         height = scale
-    else:
-        height = int(height * scale / width)
-        width = scale
+        
     img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
     return img
 
